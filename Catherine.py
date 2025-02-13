@@ -10,6 +10,10 @@ class Catherine:
         self.name = f"Catherine_{Catherine.count}"
         Catherine.count += 1
 
+    def overall_grade(self, possible_boards: set[Board], color: Space) -> tuple[Board, float]:
+        # TODO: calculate grade for each board in possible boards and return best board, grade
+        ...
+
     def grade_board_state_by_walk(self, board: Board, color: Space) -> float:
         enemy = Space.RED if color != Space.RED else Space.BLUE
         a = len(Board.walkable_by_player(board, color))
