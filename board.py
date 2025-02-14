@@ -1,3 +1,4 @@
+from copy import copy
 from enum import Enum
 
 
@@ -71,6 +72,16 @@ class Board:
         for cell in blue_miners:
             if cell in self:
                 self[cell] = Space.BLUE
+
+    def __hash__(self) -> int:
+        return hash(frozenset(self.cells.items()))
+
+    def __deepcopy__(self) -> "Board":
+        out = Board.__new__(Board)
+        out.size = self.size
+        out.miner_count = self.miner_count
+        out.cells = copy(self.cells)
+        return out
 
     def count_elements(self, element: Space) -> int:
         """
@@ -313,3 +324,13 @@ class Board:
                 continue
             frontier |= self.neighbors(curr) - visited
         return enemy_count >= 2
+
+    def clear_dead(self, other_color: Space):
+        dead_enemies = {
+            coord
+            for coord in self.cells
+            if self[coord] == other_color and self.is_miner_dead(coord)
+        }
+        for enemy in dead_enemies:
+            self[enemy] = Space.EMPTY
+

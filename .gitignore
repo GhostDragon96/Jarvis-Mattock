@@ -1,0 +1,5 @@
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.venv/
+__pycache__/game.cpython-312.pyc
