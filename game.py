@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy
 import time
 import traceback
 from typing import Protocol
@@ -53,7 +53,7 @@ class Game:
         # Current player needs to dig out a space
         with Pool(processes=1) as pool:
             mine_res = pool.apply_async(
-                player.mine, (deepcopy(self.board), player_color)
+                player.mine, (copy(self.board), player_color)
             )
             try:
                 start_time = time.monotonic()
@@ -98,7 +98,7 @@ class Game:
                 )
                 delay = pool.apply_async(time.sleep, (sleep_time,))
             move_res = pool.apply_async(
-                player.move, (deepcopy(self.board), player_color)
+                player.move, (copy(self.board), player_color)
             )
             try:
                 if self.min_sleep_time > 0:
