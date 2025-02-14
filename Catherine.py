@@ -28,7 +28,7 @@ class Catherine:
         return grade
 
     def grade_board_state_by_mine(self, board: Board, color: Space) -> float:
-        enemy = Space.RED if color != Space.RED else Space.BLUE
+        enemy = self.flip_color(color)
         a = len(Board.mineable_by_player(board, color))
         b = len(Board.mineable_by_player(board, enemy))
         for miner in board.find_all(color):
@@ -45,7 +45,8 @@ class Catherine:
 
     def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
         mineable = board.mineable_by_player(color)
-        best: list[tuple[float, Coordinate]] = []
+        boards: list[Board] = []
+        dict_boards: dict[Board: Coordinate] = {}
         for mine in mineable:
             temp_board = copy.deepcopy(board)
             temp_board[mine] = (
@@ -53,9 +54,10 @@ class Catherine:
                 if temp_board.count_elements(color) == temp_board.miner_count
                 else color
             )
-            grade = Catherine.grade_board_state_by_mine(self, temp_board, color)
-            best.append((grade, mine))
-        return max(best, key=lambda x: x[0])[1]
+            boards.append(temp_board)
+            dict_boards.update({temp_board: mine})
+        best_board = self.overall_grade(boards, color)[1]
+        return dict_boards[best_board]
     
     def flip_color(self, color: Space) -> Space:
         return Space.RED if color != Space.RED else Space.BLUE
@@ -93,20 +95,16 @@ class Catherine:
     
     def move(self, board: Board, color: Space) -> tuple[Coordinate, Coordinate] | None:
         pieces = board.find_all(color)
-        best: list[tuple[tuple[Coordinate, Coordinate] | None, float]] = [
-            (None, Catherine.grade_board_state_by_walk(self, board, color))
-        ]
+        
+        dict_boards: dict[Board, tuple[Coordinate, Coordinate] | None] = {board: None}
+        boards = [board]
         for start in pieces:
             ends = board.walkable_from_coord(start)
             for end in ends:
                 temp_board = copy.deepcopy(board)
                 temp_board[start] = Space.EMPTY
                 temp_board[end] = color
-                best.append(
-                    (
-                        (start, end),
-                        Catherine.grade_board_state_by_walk(self, temp_board, color),
-                    )
-                )
-
-        return max(best, key=lambda x: x[1])[0]
+                boards.append(temp_board)
+                dict_boards.update({temp_board: (start, end)})
+        best = self.overall_grade(boards, color)[0]
+        return dict_boards[best]
