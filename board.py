@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 from enum import Enum
 
 
@@ -76,11 +76,11 @@ class Board:
     def __hash__(self) -> int:
         return hash(frozenset(self.cells.items()))
 
-    def __deepcopy__(self) -> "Board":
+    def __copy__(self) -> "Board":
         out = Board.__new__(Board)
         out.size = self.size
         out.miner_count = self.miner_count
-        out.cells = copy(self.cells)
+        out.cells = deepcopy(self.cells)
         return out
 
     def count_elements(self, element: Space) -> int:
