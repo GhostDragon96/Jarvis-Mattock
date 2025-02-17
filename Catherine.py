@@ -2,6 +2,7 @@ from random import choice
 from board import Board, Space, Coordinate
 import copy
 
+
 class Catherine:
 
     count = 0
@@ -10,9 +11,23 @@ class Catherine:
         self.name = f"Catherine_{Catherine.count}"
         Catherine.count += 1
 
-    def overall_grade(self, possible_boards: set[Board], color: Space) -> tuple[Board, float]:
+    def overall_grade(
+        self, possible_boards: list[Board], color: Space
+    ) -> tuple[Board, float]:
         # TODO: calculate grade for each board in possible boards and return best board, grade
-        ...
+        best = []
+        for board in possible_boards:
+            best.append(
+                (
+                    board,
+                    (
+                        self.grade_board_state_by_walk(board, color)
+                        + self.grade_board_state_by_mine(board, color)
+                    )
+                    / 2,
+                )
+            )
+        return max(best, key=lambda x: x[1])
 
     def grade_board_state_by_walk(self, board: Board, color: Space) -> float:
         enemy = Space.RED if color != Space.RED else Space.BLUE
@@ -36,16 +51,17 @@ class Catherine:
                 b += 10
         grade = a - b
         return grade
-    
-        '''
+
+        """
     def mine_help(self, boards: set[Board], color: Space) -> Coordinate:
         for board in boards:
             self.grade_board_state_by_mine(board, color)
-        '''
+        """
 
     def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
         mineable = board.mineable_by_player(color)
-        best: list[tuple[float, Coordinate]] = []
+        boards: list[Board] = []
+        dict_boards: dict[Board, Coordinate] = {}
         for mine in mineable:
             temp_board = copy.deepcopy(board)
             temp_board[mine] = (
@@ -53,14 +69,15 @@ class Catherine:
                 if temp_board.count_elements(color) == temp_board.miner_count
                 else color
             )
-            grade = Catherine.grade_board_state_by_mine(self, temp_board, color)
-            best.append((grade, mine))
-        return max(best, key=lambda x: x[0])[1]
-    
+            boards.append(temp_board)
+            dict_boards.update({temp_board: mine})
+        best_board = self.overall_grade(boards, color)[0]
+        return dict_boards[best_board]
+
     def flip_color(self, color: Space) -> Space:
         return Space.RED if color != Space.RED else Space.BLUE
-    
-        '''    
+
+        """    
     def mine_help(self, board: Board, color: Space, i: int) -> list[tuple[Board, Coordinate]]:
         mineable = board.mineable_by_player(color)
         boards: list[tuple[Board, Coordinate]] = []
@@ -89,24 +106,19 @@ class Catherine:
             return best
         else:
             raise ValueError('I messed up.')
-            '''
-    
+            """
+
     def move(self, board: Board, color: Space) -> tuple[Coordinate, Coordinate] | None:
         pieces = board.find_all(color)
-        best: list[tuple[tuple[Coordinate, Coordinate] | None, float]] = [
-            (None, Catherine.grade_board_state_by_walk(self, board, color))
-        ]
+        dict_boards: dict[Board, tuple[Coordinate, Coordinate] | None] = {board: None}
+        boards = [board]
         for start in pieces:
             ends = board.walkable_from_coord(start)
             for end in ends:
                 temp_board = copy.deepcopy(board)
                 temp_board[start] = Space.EMPTY
                 temp_board[end] = color
-                best.append(
-                    (
-                        (start, end),
-                        Catherine.grade_board_state_by_walk(self, temp_board, color),
-                    )
-                )
-
-        return max(best, key=lambda x: x[1])[0]
+                boards.append(temp_board)
+                dict_boards.update({temp_board: (start, end)})
+        best = self.overall_grade(boards, color)[0]
+        return dict_boards[best]
