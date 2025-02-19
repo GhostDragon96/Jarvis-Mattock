@@ -2,28 +2,28 @@ from random import choice
 from board import Board, Space, Coordinate
 import copy
 
-class Catherine:
+class Katherine:
 
     count = 0
 
     def __init__(self):
-        self.name = f"Catherine_{Catherine.count}"
-        Catherine.count += 1
+        self.name = f"Katherine_{Katherine.count}"
+        Katherine.count += 1
 
     def overall_grade(self, possible_boards: list[Board], color: Space) -> tuple[Board, float]:
         all_grades = []
         enemy = self.flip_color(color)
         for board in possible_boards:
             color_grade = len(board.mineable_by_player(color))
-            enemy_grade = len(board.mineable_by_player(enemy))  # put number to modify value
+            enemy_grade = len(board.mineable_by_player(enemy)) # put number to modify value
             color_grade += len(board.walkable_by_player(color))
-            enemy_grade += len(board.walkable_by_player(enemy)) * 1.2 # put number to modify value
+            enemy_grade += len(board.walkable_by_player(enemy)) # put number to modify value
             for miner in board.find_all(enemy):
                 if board.is_miner_dead(miner):
                     color_grade += 2 # put number to modify value
             for miner in board.find_all(color):
                 if board.is_miner_dead(miner):
-                    enemy_grade += 10 # put number to modify value
+                    enemy_grade += 2 # put number to modify value
             total = color_grade - enemy_grade   
             all_grades += (board, total)
 

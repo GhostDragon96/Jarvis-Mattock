@@ -8,6 +8,7 @@ from board import Space
 from game import Game
 from random_bot import RandomPlayer
 from Catherine import Catherine
+from Katherine import Katherine
 
 
 def update():
@@ -71,8 +72,8 @@ def runPyGame(game: Game):
 
 
 def main():
-    player_a, player_b = Catherine(), RandomPlayer()
-    game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=2)
+    player_a, player_b = Catherine(), Katherine()
+    game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=1)
     runPyGame(game)
 
 
