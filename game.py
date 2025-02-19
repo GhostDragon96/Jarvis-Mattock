@@ -141,3 +141,13 @@ class Game:
         while not self.winner:
             self.step()
         return self.winner
+
+
+if __name__ == '__main__':
+    from Catherine import Catherine
+    from random_bot import RandomPlayer
+    player_a, player_b = Catherine(), RandomPlayer()
+    for i in range(5):
+        game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
+        print(game.play_game())
+

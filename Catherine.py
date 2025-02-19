@@ -1,7 +1,13 @@
-from random import choice
 from board import Board, Space, Coordinate
 import copy
 
+
+class Node:
+    parent: type["Node"] | None = None
+    children: list[type["Node"]] = []
+    grade: float = float("-inf")
+    children_as_board: list[Board] = []
+    value: Board | None = None
 
 class Catherine:
 
@@ -59,8 +65,9 @@ class Catherine:
         """
 
     def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
+        top = Node
+        top.value = board
         mineable = board.mineable_by_player(color)
-        boards: list[Board] = []
         dict_boards: dict[Board, Coordinate] = {}
         for mine in mineable:
             temp_board = copy.deepcopy(board)
@@ -69,9 +76,13 @@ class Catherine:
                 if temp_board.count_elements(color) == temp_board.miner_count
                 else color
             )
-            boards.append(temp_board)
+            curr = Node
+            curr.parent = top
+            curr.value = temp_board
+            top.children += [curr]
+            top.children_as_board += [temp_board]
             dict_boards.update({temp_board: mine})
-        best_board = self.overall_grade(boards, color)[0]
+        best_board = self.overall_grade(top.children_as_board, color)[0]
         return dict_boards[best_board]
 
     def flip_color(self, color: Space) -> Space:
