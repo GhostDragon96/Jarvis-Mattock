@@ -1,13 +1,18 @@
+from dataclasses import Field, dataclass
+from typing import Self
 from board import Board, Space, Coordinate
 import copy
 
 
 class Node:
-    parent: type["Node"] | None = None
-    children: list[type["Node"]] = []
+    value: Board | None = None
+    parent: Self | None = None
+    children: list["Node"] = []
     grade: float = float("-inf")
     children_as_board: list[Board] = []
-    value: Board | None = None
+
+    def __init__(self, value) -> None:
+        self.value = value
 
 class Catherine:
 
@@ -65,8 +70,20 @@ class Catherine:
         """
 
     def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
-        top = Node
-        top.value = board
+        top = Node(board)
+        dict_boards: dict[Board, Coordinate] = {}
+        new_dict, top = self.mine_help(top, color)
+        dict_boards.update(new_dict if new_dict is not None else {})
+        best_board = self.overall_grade(top.children_as_board, color)[0]
+        return dict_boards[best_board]
+
+    def flip_color(self, color: Space) -> Space:
+        return Space.RED if color != Space.RED else Space.BLUE
+  
+    def mine_help(self, node: Node, color: Space) -> tuple[dict, Node] | tuple[None, Node]:
+        board = node.value
+        if board is None:
+            return None, node
         mineable = board.mineable_by_player(color)
         dict_boards: dict[Board, Coordinate] = {}
         for mine in mineable:
@@ -76,48 +93,12 @@ class Catherine:
                 if temp_board.count_elements(color) == temp_board.miner_count
                 else color
             )
-            curr = Node
-            curr.parent = top
-            curr.value = temp_board
-            top.children += [curr]
-            top.children_as_board += [temp_board]
+            curr = Node(temp_board)
+            curr.parent = node
+            node.children += [curr]
+            node.children_as_board += [temp_board]
             dict_boards.update({temp_board: mine})
-        best_board = self.overall_grade(top.children_as_board, color)[0]
-        return dict_boards[best_board]
-
-    def flip_color(self, color: Space) -> Space:
-        return Space.RED if color != Space.RED else Space.BLUE
-
-        """    
-    def mine_help(self, board: Board, color: Space, i: int) -> list[tuple[Board, Coordinate]]:
-        mineable = board.mineable_by_player(color)
-        boards: list[tuple[Board, Coordinate]] = []
-        for mine in mineable:
-            temp_board = copy.deepcopy(board)
-            temp_board[mine] = Space.EMPTY
-            boards.append((temp_board, mine))
-        if i != 2:
-            all_boards = []
-            for b in boards:
-                all_boards += self.mine_help(b[0], Catherine.flip_color(self, color), i+1)
-            boards = all_boards
-        return boards
-
-    def mine(self, board: Board, color: Space) -> Coordinate:
-        boards = Catherine.mine_help(self, board, color, 0)
-        best_grade = 0 - float('inf')
-        best = None
-        for poss_board, coor in boards:
-            grade = Catherine.grade_board_state_by_mine(self, poss_board, color)
-            print(grade)
-            if grade > best_grade:
-                best = coor
-                best_grade = grade
-        if best is not None:
-            return best
-        else:
-            raise ValueError('I messed up.')
-            """
+        return dict_boards, node
 
     def move(self, board: Board, color: Space) -> tuple[Coordinate, Coordinate] | None:
         pieces = board.find_all(color)

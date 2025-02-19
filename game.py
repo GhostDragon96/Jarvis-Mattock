@@ -102,7 +102,7 @@ class Game:
             )
             try:
                 if self.min_sleep_time > 0:
-                    delay.get()
+                    delay.get() # type: ignore
                 start_time = time.monotonic()
                 move = move_res.get(available_time)
                 end_time = time.monotonic()
