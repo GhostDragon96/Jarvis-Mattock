@@ -147,7 +147,11 @@ if __name__ == '__main__':
     from Catherine import Catherine
     from random_bot import RandomPlayer
     player_a, player_b = Catherine(), RandomPlayer()
-    for i in range(5):
+    game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
+    i = 0
+    while game.winner != Space.BLUE:
+        player_a, player_b = Catherine(), RandomPlayer(rng_seed=i)
         game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
-        print(game.play_game())
+        print(game.play_game(), i)
+        i += 1
 

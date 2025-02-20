@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, seed
 import time
 from board import Board, Space, Coordinate
 
@@ -7,7 +7,9 @@ class RandomPlayer:
 
     count = 0
 
-    def __init__(self, artificial_delay: float = 0):
+    def __init__(self, artificial_delay: float = 0, rng_seed: int | None = None):
+        if rng_seed:
+            seed(rng_seed)
         self.name = f"rando_{RandomPlayer.count}"
         self.artificial_delay = artificial_delay
         RandomPlayer.count += 1

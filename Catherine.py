@@ -1,5 +1,5 @@
 from dataclasses import Field, dataclass
-from typing import Self
+from typing import Generator, Self
 from board import Board, Space, Coordinate
 import copy
 
@@ -72,18 +72,23 @@ class Catherine:
     def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
         top = Node(board)
         dict_boards: dict[Board, Coordinate] = {}
-        new_dict, top = self.mine_help(top, color)
-        dict_boards.update(new_dict if new_dict is not None else {})
-        best_board = self.overall_grade(top.children_as_board, color)[0]
+        for node in self.mine_help(top, color, False):
+            if type(node) == dict:
+                raise ValueError('flag not working')
+            new_dict: dict = list(self.mine_help(node, self.flip_color(color), True))[0]
+            dict_boards.update(new_dict if new_dict is not None else {})
+            if dict_boards.keys() == set():
+                print(new_dict)
+        best_board = self.overall_grade(list(dict_boards.keys()), color)[0]
         return dict_boards[best_board]
 
     def flip_color(self, color: Space) -> Space:
         return Space.RED if color != Space.RED else Space.BLUE
   
-    def mine_help(self, node: Node, color: Space) -> tuple[dict, Node] | tuple[None, Node]:
+    def mine_help(self, node: Node, color: Space, flag: bool) -> Generator[dict] | Generator[Node]:
         board = node.value
         if board is None:
-            return None, node
+            return
         mineable = board.mineable_by_player(color)
         dict_boards: dict[Board, Coordinate] = {}
         for mine in mineable:
@@ -98,7 +103,10 @@ class Catherine:
             node.children += [curr]
             node.children_as_board += [temp_board]
             dict_boards.update({temp_board: mine})
-        return dict_boards, node
+            if not flag:
+                yield curr
+        if flag:
+            yield dict_boards
 
     def move(self, board: Board, color: Space) -> tuple[Coordinate, Coordinate] | None:
         pieces = board.find_all(color)
@@ -114,3 +122,7 @@ class Catherine:
                 dict_boards.update({temp_board: (start, end)})
         best = self.overall_grade(boards, color)[0]
         return dict_boards[best]
+
+if __name__ == '__main__':
+    import display
+    display.main()
