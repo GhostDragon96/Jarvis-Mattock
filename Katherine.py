@@ -14,19 +14,18 @@ class Katherine:
         all_grades = []
         enemy = self.flip_color(color)
         for board in possible_boards:
-            color_grade = len(board.mineable_by_player(color))
-            enemy_grade = len(board.mineable_by_player(enemy)) # put number to modify value
-            color_grade += len(board.walkable_by_player(color))
-            enemy_grade += len(board.walkable_by_player(enemy)) # put number to modify value
-            for miner in board.find_all(enemy):
-                if board.is_miner_dead(miner):
-                    color_grade += 2 # put number to modify value
+            color_grade = len(board.mineable_by_player(color)) *10
+            enemy_grade = len(board.mineable_by_player(enemy)) *10 # put number to modify value
+            color_grade += len(board.walkable_by_player(color)) *10
+            enemy_grade += len(board.walkable_by_player(enemy)) * 1 # put number to modify value
+            #for miner in board.find_all(enemy):
+              #  if board.is_miner_dead(miner):
+                  #  color_grade += 10 # put number to modify value
             for miner in board.find_all(color):
                 if board.is_miner_dead(miner):
-                    enemy_grade += 2 # put number to modify value
+                    enemy_grade += 200 # put number to modify value
             total = color_grade - enemy_grade   
-            all_grades += (board, total)
-
+            all_grades.append((board, total))
         return max(all_grades, key= lambda x: x[1])
 
        
@@ -64,9 +63,9 @@ class Katherine:
     def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
         mineable = board.mineable_by_player(color)
         boards: list[Board] = []
-        dict_boards: dict[Board: Coordinate] = {}
+        dict_boards: dict[Board, Coordinate] = {}
         for mine in mineable:
-            temp_board = copy.deepcopy(board)
+            temp_board = copy.copy(board)
             temp_board[mine] = (
                 Space.EMPTY
                 if temp_board.count_elements(color) == temp_board.miner_count
@@ -75,7 +74,8 @@ class Katherine:
             boards.append(temp_board)
             dict_boards.update({temp_board: mine})
         best_board = self.overall_grade(boards, color)[0]
-        return dict_boards[best_board]
+        mine = dict_boards[best_board]
+        return mine
     
     def flip_color(self, color: Space) -> Space:
         return Space.RED if color != Space.RED else Space.BLUE
@@ -91,16 +91,16 @@ class Katherine:
         if i != 2:
             all_boards = []
             for b in boards:
-                all_boards += self.mine_help(b[0], Catherine.flip_color(self, color), i+1)
+                all_boards += self.mine_help(b[0], Katherine.flip_color(self, color), i+1)
             boards = all_boards
         return boards
 
     def mine(self, board: Board, color: Space) -> Coordinate:
-        boards = Catherine.mine_help(self, board, color, 0)
+        boards = Katherine.mine_help(self, board, color, 0)
         best_grade = 0 - float('inf')
         best = None
         for poss_board, coor in boards:
-            grade = Catherine.grade_board_state_by_mine(self, poss_board, color)
+            grade = Katherine.grade_board_state_by_mine(self, poss_board, color)
             print(grade)
             if grade > best_grade:
                 best = coor

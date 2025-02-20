@@ -72,8 +72,8 @@ def runPyGame(game: Game):
 
 
 def main():
-    player_a, player_b = Catherine(), Katherine()
-    game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=1)
+    player_a, player_b = Katherine(), Catherine() #player a = red, b = blue
+    game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
     runPyGame(game)
 
 
