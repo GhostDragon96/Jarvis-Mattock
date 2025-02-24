@@ -106,12 +106,6 @@ class Catherine:
             next(self.mine_help(node, self.flip_color(color), True))
         best = self.minimax(top, 0, True, float("-inf"), float("inf"), color)
         if best.best_child and best.best_child.mine:
-            with open("where_to_walk.txt", "w") as file:
-                if best.best_child.walk:
-                    file.write(f"{best.best_child.walk[0]} {best.best_child.walk[1]}")
-                else:
-                    file.write("None")
-                file.close()
             return best.best_child.mine
         else:
             i = [child.value for child in top.children if child.mine is None]
