@@ -146,6 +146,8 @@ class Game:
 if __name__ == '__main__':
     from Catherine import Catherine
     from random_bot import RandomPlayer
+    import display
+    import pygame
     player_a, player_b = Catherine(), RandomPlayer()
     game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
     i = 0
@@ -154,4 +156,8 @@ if __name__ == '__main__':
         game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
         print(game.play_game(), i)
         i += 1
-
+    pygame.init()
+    display.draw(pygame.display.set_mode((800, 800)), game)
+    display.update()
+    while True:
+        ...

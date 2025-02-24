@@ -1,4 +1,3 @@
-from dataclasses import Field, dataclass
 from typing import Generator, Self
 from board import Board, Space, Coordinate
 import copy
@@ -9,10 +8,17 @@ class Node:
     parent: Self | None = None
     children: list["Node"] = []
     grade: float = float("-inf")
-    children_as_board: list[Board] = []
+    mine: Coordinate | None = None
+    walk: tuple[Coordinate, Coordinate] | None = None
+    best_child: None | Self = None
 
     def __init__(self, value) -> None:
         self.value = value
+
+    def add_child(self, child: Self) -> None:
+        self.children.append(child)
+        child.parent = self
+
 
 class Catherine:
 
@@ -22,23 +28,52 @@ class Catherine:
         self.name = f"Catherine_{Catherine.count}"
         Catherine.count += 1
 
-    def overall_grade(
-        self, possible_boards: list[Board], color: Space
-    ) -> tuple[Board, float]:
+    def overall_grade(self, node: Node, color: Space) -> None:
         # TODO: calculate grade for each board in possible boards and return best board, grade
-        best = []
-        for board in possible_boards:
-            best.append(
-                (
-                    board,
-                    (
-                        self.grade_board_state_by_walk(board, color)
-                        + self.grade_board_state_by_mine(board, color)
-                    )
-                    / 2,
-                )
-            )
-        return max(best, key=lambda x: x[1])
+        if node.value is None:
+            return
+        node.grade = (
+            self.grade_board_state_by_walk(node.value, color)
+            + self.grade_board_state_by_mine(node.value, color)
+        ) / 2
+        return
+
+    def minimax(
+        self,
+        node: Node,
+        depth: int,
+        is_maximizing: bool,
+        alpha: float,
+        beta: float,
+        color: Space,
+        max_depth: int = 2,
+    ) -> Node:
+        if node.children == [] or depth == max_depth:
+            self.overall_grade(node, color)
+            return node
+
+        if is_maximizing:
+            best = float("-inf")
+            child = None
+            for child in node.children:
+                value = self.minimax(child, depth + 1, False, alpha, beta, color).grade
+                bestVal = max(best, value)
+                alpha = max(alpha, bestVal)
+                if beta <= alpha:
+                    break
+            node.best_child = child
+            return child if child is not None else node
+        else:
+            best = float("inf")
+            child = None
+            for child in node.children:
+                value = self.minimax(child, depth + 1, False, alpha, beta, color).grade
+                bestVal = min(best, value)
+                beta = min(alpha, bestVal)
+                if beta <= alpha:
+                    break
+            node.best_child = child
+            return child if child is not None else node
 
     def grade_board_state_by_walk(self, board: Board, color: Space) -> float:
         enemy = Space.RED if color != Space.RED else Space.BLUE
@@ -63,34 +98,33 @@ class Catherine:
         grade = a - b
         return grade
 
-        """
-    def mine_help(self, boards: set[Board], color: Space) -> Coordinate:
-        for board in boards:
-            self.grade_board_state_by_mine(board, color)
-        """
-
-    def mine(self, board: Board, color: Space, flag: bool = True) -> Coordinate:
+    def mine(self, board: Board, color: Space) -> Coordinate:
         top = Node(board)
-        dict_boards: dict[Board, Coordinate] = {}
         for node in self.mine_help(top, color, False):
-            if type(node) == dict:
-                raise ValueError('flag not working')
-            new_dict: dict = list(self.mine_help(node, self.flip_color(color), True))[0]
-            dict_boards.update(new_dict if new_dict is not None else {})
-            if dict_boards.keys() == set():
-                print(new_dict)
-        best_board = self.overall_grade(list(dict_boards.keys()), color)[0]
-        return dict_boards[best_board]
+            if type(node) != Node:
+                raise ValueError("flag not working")
+            next(self.mine_help(node, self.flip_color(color), True))
+        best = self.minimax(top, 0, True, float("-inf"), float("inf"), color)
+        if best.best_child and best.best_child.mine:
+            with open("where_to_walk.txt", "w") as file:
+                if best.best_child.walk:
+                    file.write(f"{best.best_child.walk[0]} {best.best_child.walk[1]}")
+                else:
+                    file.write("None")
+                file.close()
+            return best.best_child.mine
+        else:
+            i = [child.value for child in top.children if child.mine is None]
+            raise ValueError(f"{i}")
 
     def flip_color(self, color: Space) -> Space:
         return Space.RED if color != Space.RED else Space.BLUE
-  
-    def mine_help(self, node: Node, color: Space, flag: bool) -> Generator[dict] | Generator[Node]:
+
+    def mine_help(self, node: Node, color: Space, flag: bool) -> Generator[Node]:
         board = node.value
         if board is None:
-            return
+            raise ValueError(f"{node.value=}")
         mineable = board.mineable_by_player(color)
-        dict_boards: dict[Board, Coordinate] = {}
         for mine in mineable:
             temp_board = copy.deepcopy(board)
             temp_board[mine] = (
@@ -99,30 +133,32 @@ class Catherine:
                 else color
             )
             curr = Node(temp_board)
-            curr.parent = node
-            node.children += [curr]
-            node.children_as_board += [temp_board]
-            dict_boards.update({temp_board: mine})
+            node.add_child(curr)
+            curr.mine = mine
             if not flag:
                 yield curr
         if flag:
-            yield dict_boards
+            yield node
 
     def move(self, board: Board, color: Space) -> tuple[Coordinate, Coordinate] | None:
-        pieces = board.find_all(color)
-        dict_boards: dict[Board, tuple[Coordinate, Coordinate] | None] = {board: None}
-        boards = [board]
-        for start in pieces:
+        node = Node(board)
+        for start in board.find_all(color):
             ends = board.walkable_from_coord(start)
             for end in ends:
-                temp_board = copy.deepcopy(board)
-                temp_board[start] = Space.EMPTY
-                temp_board[end] = color
-                boards.append(temp_board)
-                dict_boards.update({temp_board: (start, end)})
-        best = self.overall_grade(boards, color)[0]
-        return dict_boards[best]
+                walk_board = copy.deepcopy(board)
+                walk_board[start] = Space.EMPTY
+                walk_board[end] = color
+                new = Node(walk_board)
+                new.walk = (start, end)
+                node.add_child(new)
+                next(self.mine_help(new, self.flip_color(color), True))
+        node.add_child(node)
+        self.minimax(node, 0, True, float("-inf"), float("inf"), color)
+        print(node.best_child.walk if node.best_child else "no best child")
+        return node.best_child.walk if node.best_child is not None else None
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import display
+
     display.main()
