@@ -62,17 +62,29 @@ def runPyGame(game: Game):
     # Set up the window.
     width, height = 800, 800
     screen = pygame.display.set_mode((width, height))
-
+    once = True
     while True:
+    # for _ in range(2):
+        flag = False
         update()
         draw(screen, game)
         if game.winner is None:
             game.step()
+        else:
+            flag = True
+        if flag and once:
+            print(f'RED: {len(game.board.mineable_by_player(Space.RED))}, BLUE: {len(game.board.mineable_by_player(Space.BLUE))}')
+            once = False
+    update()
+    draw(screen, game)
+    while True:
+        ...
+
 
 
 def main():
     player_a, player_b = Catherine(), RandomPlayer()
-    game = Game(player_a, player_b, time_per_move=10, small=True, min_sleep_time=0)
+    game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
     runPyGame(game)
 
 
