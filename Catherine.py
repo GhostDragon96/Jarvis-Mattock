@@ -77,22 +77,26 @@ class Catherine:
             child = None
             for child in node.children:
                 value = self.minimax(child, depth + 1, False, alpha, beta, color).grade
-                bestVal = max(best, value)
-                alpha = max(alpha, bestVal)
+                best = max(best, value)
+                alpha = max(alpha, best)
                 if beta <= alpha:
                     break
             node.best_child = child
+                
             return child if child is not None else node
         else:
             best = float("inf")
             child = None
             for child in node.children:
-                value = self.minimax(child, depth + 1, False, alpha, beta, color).grade
-                bestVal = min(best, value)
-                beta = min(alpha, bestVal)
+                if child.mine is None:
+                    continue
+                value = self.minimax(child, depth + 1, True, alpha, beta, color).grade
+                best = min(best, value)
+                beta = min(beta, best)
                 if beta <= alpha:
                     break
             node.best_child = child
+                
             return child if child is not None else node
 
     def mine(self, board: Board, color: Space) -> Coordinate:
@@ -105,10 +109,7 @@ class Catherine:
                 if type(next_node) != Node:
                     raise ValueError("flag not working")
                 next(self.mine_help(next_node, color, True))
-        start = time()
         best = self.minimax(top, 0, True, float("-inf"), float("inf"), color, 2)
-        end = time()
-        print((end-start)*1000)
         if top.best_child and top.best_child.mine and best and best.mine: # wtf is going on? 
             return best.mine # top.best_child.mine
         else:
@@ -123,9 +124,7 @@ class Catherine:
         if board is None:
             raise ValueError(f"{node.value=}")
         mineable = board.mineable_by_player(color)
-        for player in board.find_all(color):
-            if player in mineable:
-                mineable.remove(player)
+        mineable = [m for m in mineable if m not in board.find_all(color)]
         for mine in mineable:
             temp_board = copy.deepcopy(board)
             temp_board[mine] = (
@@ -161,12 +160,20 @@ class Catherine:
 
 if __name__ == "__main__":
     import display
-
-    """
+    '''
+    import pygame
+    
     from game import Game
     from random_bot import RandomPlayer
     player_a, player_b = Catherine(), RandomPlayer()
     game = Game(player_a, player_b, time_per_move=10, small=True, min_sleep_time=0)
     game.step()
-    """
+    pygame.init()
+    display.update()
+    display.draw(pygame.display.set_mode((800, 800)), game)
+    display.update()
+    while True:
+        ...
+    '''
     display.main()
+    

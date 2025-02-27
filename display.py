@@ -83,7 +83,7 @@ def runPyGame(game: Game):
 
 
 def main():
-    player_a, player_b = Catherine(), RandomPlayer()
+    player_b, player_a = Catherine(), RandomPlayer()
     game = Game(player_a, player_b, time_per_move=3, small=True, min_sleep_time=0)
     runPyGame(game)
 
