@@ -39,6 +39,8 @@ class Catherine:
         enemy = self.flip_color(color)
         color_grade = (len(node.value.mineable_by_player(color))) * self.color_mineable
         enemy_grade = (len(node.value.mineable_by_player(enemy))) * self.enemy_mineable
+        if enemy_grade == 0:
+            color_grade += 500
         color_grade += (len(node.value.walkable_by_player(color))) * self.color_walkable
         enemy_grade += (len(node.value.walkable_by_player(enemy))) * self.enemy_walkable
         for miner in node.value.find_all(color):

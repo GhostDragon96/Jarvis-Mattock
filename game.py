@@ -142,7 +142,7 @@ class Game:
 
 
 if __name__ == "__main__":
-    '''
+    from random import choice
     from Catherine import Catherine
     from random_bot import RandomPlayer
     def close_to(fl1: float, fl2: float) -> bool:
@@ -180,7 +180,7 @@ if __name__ == "__main__":
                             i += 1
                             # print("Random", i)
                 except KeyboardInterrupt:
-                    print((i / (o + 1)) * 100, "percent lost")
+                    print((i / (o + 1)) * 100, "percent lost", changes)
                     exit()
             # print((i / 25) * 100, "percent lost", change)
             worst.append((change[iter_of_change], (i / 3) * 100)) #######################
@@ -192,13 +192,12 @@ if __name__ == "__main__":
         plus_or_minus = 0.7 * abs(changes[0][iter_of_change] - avg) # 70% of the change
         mid_tup_list: list[float] = list(changes[0])
         mid_tup_list[iter_of_change] = avg
-        front_tup_list = mid_tup_list
+        front_tup_list = list(mid_tup_list)
         front_tup_list[iter_of_change] = avg - plus_or_minus
-        end_tup_list = mid_tup_list
+        end_tup_list = list(mid_tup_list)
         end_tup_list[iter_of_change] = avg + plus_or_minus
         changes = [tuple(front_tup_list), tuple(mid_tup_list), tuple(end_tup_list)] # type: ignore # will be 5 long
-        print('hit')
     print(changes)
 
 
-    '''
+    
