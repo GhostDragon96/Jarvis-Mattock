@@ -1,3 +1,4 @@
+# Jack Pope, Edrin Jubani, Luca Somma
 from typing import Generator, Self
 from board import Board, Space, Coordinate
 import copy
