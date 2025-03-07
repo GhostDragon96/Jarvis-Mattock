@@ -1,14 +1,12 @@
 from typing import Generator, Self
 from board import Board, Space, Coordinate
 import copy
-from time import time
 
 
 class Node:
 
     def __init__(self, value: Board) -> None:
-        self.value = value
-        self.parent: Node | None = None
+        self.value: Board = value
         self.children: list[Node] = []
         self.grade: float = float("-inf")
         self.mine: Coordinate | None = None
@@ -17,14 +15,15 @@ class Node:
 
     def add_child(self, child: Self) -> None:
         self.children.append(child)
-        child.parent = self
 
 
 class Catherine:
 
     count = 0
 
-    def __init__(self, modifiers: tuple[float,float,float,float,float] = (10, 10, 10, 1, 200)):
+    def __init__(
+        self, modifiers: tuple[float, float, float, float, float] = (10, 10, 10, 1, 200)
+    ):
         self.name = f"Catherine_{Catherine.count}"
         Catherine.count += 1
         self.color_mineable = modifiers[0]
@@ -48,18 +47,6 @@ class Catherine:
                 enemy_grade += self.dead
         node.grade = color_grade - enemy_grade
 
-    """
-    def overall_grade(self, node: Node, color: Space) -> None:
-        # TODO: calculate grade for each board in possible boards and return best board, grade
-        if node.value is None:
-            return
-        node.grade = (
-            self.grade_board_state_by_walk(node.value, color)
-            + self.grade_board_state_by_mine(node.value, color)
-        ) / 2
-        return
-    """
-
     def minimax(
         self,
         node: Node,
@@ -69,37 +56,38 @@ class Catherine:
         beta: float,
         color: Space,
         max_depth: int = 2,
-    ) -> Node:
+    ) -> float:
         if node.children == [] or depth == max_depth:
             self.overall_grade(node, color)
-            return node
+            return node.grade
 
         if is_maximizing:
             best = float("-inf")
-            child = None
+            child: Node | None = None
             for child in node.children:
-                value = self.minimax(child, depth + 1, False, alpha, beta, color).grade
+                value = self.minimax(child, depth + 1, False, alpha, beta, color)
                 best = max(best, value)
                 alpha = max(alpha, best)
                 if beta <= alpha:
                     break
+            node.grade = best
             node.best_child = child
-                
-            return child if child is not None else node
+
+            return child.grade if child is not None else node.grade
         else:
             best = float("inf")
-            child = None
+            child: Node | None = None
             for child in node.children:
                 if child.mine is None:
                     continue
-                value = self.minimax(child, depth + 1, True, alpha, beta, color).grade
+                value = self.minimax(child, depth + 1, True, alpha, beta, color)
                 best = min(best, value)
                 beta = min(beta, best)
                 if beta <= alpha:
                     break
+            node.grade = best
             node.best_child = child
-                
-            return child if child is not None else node
+            return child.grade if child is not None else node.grade
 
     def mine(self, board: Board, color: Space) -> Coordinate:
         top = Node(board)
@@ -111,9 +99,10 @@ class Catherine:
                 if type(next_node) != Node:
                     raise ValueError("flag not working")
                 next(self.mine_help(next_node, color, True))
-        best = self.minimax(top, 0, True, float("-inf"), float("inf"), color, 2)
-        if top.best_child and top.best_child.mine and best and best.mine: # wtf is going on? 
-            return best.mine # top.best_child.mine
+        self.minimax(top, 0, True, float("-inf"), float("inf"), color, 2)
+        thing = max(top.children, key=lambda x: x.grade)
+        if thing and thing.mine:
+            return thing.mine
         else:
             i = [child.value for child in top.children if child.mine is None]
             raise ValueError(f"{i}")
@@ -122,11 +111,11 @@ class Catherine:
         return Space.RED if color != Space.RED else Space.BLUE
 
     def mine_help(self, node: Node, color: Space, flag: bool) -> Generator[Node]:
-        board = node.value
-        if board is None:
-            raise ValueError(f"{node.value=}")
+        board: Board = node.value
         mineable = board.mineable_by_player(color)
-        mineable = [m for m in mineable if m not in board.find_all(color)]
+        mineable = [
+            m for m in mineable if m not in board.find_all(color)
+        ]  # sometimes mineable_by_player returns the place where we are
         for mine in mineable:
             temp_board = copy.deepcopy(board)
             temp_board[mine] = (
@@ -156,26 +145,5 @@ class Catherine:
                 node.add_child(new)
                 next(self.mine_help(new, self.flip_color(color), True))
         self.minimax(node, 0, True, float("-inf"), float("inf"), color)
-        # print(node.best_child.walk if node.best_child else "no best child")
-        return node.best_child.walk if node.best_child is not None else None
-
-
-if __name__ == "__main__":
-    import display
-    '''
-    import pygame
-    
-    from game import Game
-    from random_bot import RandomPlayer
-    player_a, player_b = Catherine(), RandomPlayer()
-    game = Game(player_a, player_b, time_per_move=10, small=True, min_sleep_time=0)
-    game.step()
-    pygame.init()
-    display.update()
-    display.draw(pygame.display.set_mode((800, 800)), game)
-    display.update()
-    while True:
-        ...
-    '''
-    display.main()
-    
+        thing = max(node.children, key=lambda x: x.grade)
+        return thing.walk if thing is not None else None

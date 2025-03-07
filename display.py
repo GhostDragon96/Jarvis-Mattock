@@ -64,7 +64,7 @@ def runPyGame(game: Game):
     screen = pygame.display.set_mode((width, height))
     once = True
     while True:
-    # for _ in range(2):
+        # for _ in range(2):
         flag = False
         update()
         draw(screen, game)
@@ -73,13 +73,14 @@ def runPyGame(game: Game):
         else:
             flag = True
         if flag and once:
-            print(f'RED: {len(game.board.mineable_by_player(Space.RED))}, BLUE: {len(game.board.mineable_by_player(Space.BLUE))}')
+            print(
+                f"RED: {len(game.board.mineable_by_player(Space.RED))}, BLUE: {len(game.board.mineable_by_player(Space.BLUE))}"
+            )
             once = False
     update()
     draw(screen, game)
     while True:
         ...
-
 
 
 def main():

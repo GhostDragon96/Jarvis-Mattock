@@ -13,7 +13,7 @@ class Player(Protocol):
     def name(self) -> str: ...
 
     def mine(self, board: Board, color: Space) -> Coordinate: ...
-
+    
     def move(
         self, board: Board, color: Space
     ) -> tuple[Coordinate, Coordinate] | None: ...
@@ -139,65 +139,4 @@ class Game:
         while not self.winner:
             self.step()
         return self.winner
-
-
-if __name__ == "__main__":
-    from random import choice
-    from Catherine import Catherine
-    from random_bot import RandomPlayer
-    def close_to(fl1: float, fl2: float) -> bool:
-        if abs(fl1-fl2) > 1:
-            return False
-        return True
-
-    i = 0
-    o = 0
-    iter_of_change = 0
-    changes: list[tuple[float, float, float, float, float]] = [
-        (100, 10, 10, 1, 200),
-        (50, 10, 10, 1, 200),
-        (0, 10, 10, 1, 200),
-    ]
-    worst: list[tuple[float, float]] = []
-    while not close_to(changes[0][iter_of_change], changes[1][iter_of_change]):
-        for change in changes:
-            for o in range(3): #######################
-                try:
-                    if o % 2 == 0:
-                        player_a, player_b = Catherine(change), RandomPlayer(rng_seed=o)
-                    else:
-                        player_b, player_a = Catherine(change), RandomPlayer(rng_seed=o)
-                    game = Game(
-                        player_a, player_b, time_per_move=3, small=True, min_sleep_time=0
-                    )
-                    winner = game.play_game()
-                    if o % 2 == 0:
-                        if winner == Space.BLUE:
-                            i += 1
-                            # print('Random', i)
-                    else:
-                        if winner == Space.RED:
-                            i += 1
-                            # print("Random", i)
-                except KeyboardInterrupt:
-                    print((i / (o + 1)) * 100, "percent lost", changes)
-                    exit()
-            # print((i / 25) * 100, "percent lost", change)
-            worst.append((change[iter_of_change], (i / 3) * 100)) #######################
-            i = 0
-        for poss in changes:
-            if poss[iter_of_change] == max(worst, key= lambda x: x[1])[0]:
-                changes.remove(poss)
-        avg = (changes[0][iter_of_change]+changes[1][iter_of_change])/2
-        plus_or_minus = 0.7 * abs(changes[0][iter_of_change] - avg) # 70% of the change
-        mid_tup_list: list[float] = list(changes[0])
-        mid_tup_list[iter_of_change] = avg
-        front_tup_list = list(mid_tup_list)
-        front_tup_list[iter_of_change] = avg - plus_or_minus
-        end_tup_list = list(mid_tup_list)
-        end_tup_list[iter_of_change] = avg + plus_or_minus
-        changes = [tuple(front_tup_list), tuple(mid_tup_list), tuple(end_tup_list)] # type: ignore # will be 5 long
-    print(changes)
-
-
     
